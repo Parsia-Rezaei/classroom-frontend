@@ -3,6 +3,12 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@layer components {
+    .page-title {
+      @apply text-3xl font-bold text-foreground tracking-tight;
+    }
+}
+
 
 @layer base {
   * {
