@@ -22,6 +22,21 @@ const SubjectLists = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDepartment, setSelecteddepartment] = useState("");
 
+  const departmentFilters =
+    selectedDepartment === "all"
+      ? []
+      : [
+          {
+            field: "department",
+            operator: "eq" as const,
+            value: selectedDepartment,
+          },
+        ];
+
+  const searchFilters = searchQuery
+    ? [{ field: "name", operator: "contains" as const, value: searchQuery }]
+    : [];
+
   const subjectTable = useTable<Subject>({
     columns: useMemo<ColumnDef<Subject>[]>(() => {
       return [
@@ -32,10 +47,44 @@ const SubjectLists = () => {
           header: () => <p className="column-title ml-2">Code</p>,
           cell: ({ getValue }) => <Badge>{getValue<string>()}</Badge>,
         },
+        {
+          id: "name",
+          accessorKey: "name",
+          size: 100,
+          header: () => <p className="column-title ml-2">Name</p>,
+          cell: ({ getValue }) => <Badge>{getValue<string>()}</Badge>,
+          filterFn: "includesString", // search based on string
+        },
+        {
+          id: "department",
+          accessorKey: "department",
+          size: 100,
+          header: () => <p className="column-title ml-2">Department</p>,
+          cell: ({ getValue }) => (
+            <Badge variant="secondary">{getValue<string>()}</Badge>
+          ),
+        },
+        {
+          id: "description",
+          accessorKey: "description",
+          size: 300,
+          header: () => <p className="column-title ml-2">Description</p>,
+          cell: ({ getValue }) => (
+            <span className="text-foreground truncate line-clamp-2">
+              {getValue<string>()}
+            </span>
+          ),
+        },
       ];
     }, []),
     refineCoreProps: {
       resource: "subjects",
+      filters: {
+        permanent: [...departmentFilters, ...searchFilters],
+      },
+      sorters: {
+        initial: [{ field: "id", order: "desc" }],
+      },
       pagination: {
         pageSize: 10,
         mode: "server",
@@ -62,7 +111,7 @@ const SubjectLists = () => {
               className="pl-10 w-full"
             />
           </div>
-          <div className="flex gap-2 w-full sm:w-auto mt-5">
+          <div className="flex gap-2 w-full sm:w-auto my-5">
             <Select
               value={selectedDepartment}
               onValueChange={setSelecteddepartment}
