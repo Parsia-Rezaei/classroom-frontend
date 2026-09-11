@@ -1,4 +1,5 @@
 import { CreateButton } from "@/components/refine-ui/buttons/create";
+import { ShowButton } from "@/components/refine-ui/buttons/show";
 import { DataTable } from "@/components/refine-ui/data-table/data-table";
 import { Breadcrumb } from "@/components/refine-ui/layout/breadcrumb";
 import { ListView } from "@/components/refine-ui/views/list-view";
@@ -20,9 +21,9 @@ import { useMemo, useState } from "react";
 
 const SubjectLists = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedDepartment, setSelecteddepartment] = useState("");
+  const [selectedDepartment, setSelecteddepartment] = useState<string>("all");
 
-  const departmentFilters =
+   const departmentFilters =
     selectedDepartment === "all"
       ? []
       : [
@@ -34,64 +35,93 @@ const SubjectLists = () => {
         ];
 
   const searchFilters = searchQuery
-    ? [{ field: "name", operator: "contains" as const, value: searchQuery }]
+    ? [
+        {
+          field: "name",
+          operator: "contains" as const,
+          value: searchQuery,
+        },
+      ]
     : [];
+     const subjectColumns = useMemo<ColumnDef<Subject>[]>(
+    () => [
+      {
+        id: "code",
+        accessorKey: "code",
+        size: 100,
+        header: () => <p className="column-title ml-2">Code</p>,
+        cell: ({ getValue }) => <Badge>{getValue<string>()}</Badge>,
+      },
+      {
+        id: "name",
+        accessorKey: "name",
+        size: 200,
+        header: () => <p className="column-title">Name</p>,
+        cell: ({ getValue }) => (
+          <span className="text-foreground">{getValue<string>()}</span>
+        ),
+        filterFn: "includesString",
+      },
+      {
+        id: "department",
+        accessorKey: "department.name",
+        size: 150,
+        header: () => <p className="column-title">Department</p>,
+        cell: ({ getValue }) => (
+          <Badge variant="secondary">{getValue<string>()}</Badge>
+        ),
+      },
+      {
+        id: "description",
+        accessorKey: "description",
+        size: 300,
+        header: () => <p className="column-title">Description</p>,
+        cell: ({ getValue }) => (
+          <span className="truncate line-clamp-2">{getValue<string>()}</span>
+        ),
+      },
+      {
+        id: "details",
+        size: 140,
+        header: () => <p className="column-title">Details</p>,
+        cell: ({ row }) => (
+          <ShowButton
+            resource="subjects"
+            recordItemId={row.original.id}
+            variant="outline"
+            size="sm"
+          >
+            View
+          </ShowButton>
+        ),
+      },
+    ],
+    []
+  );
 
-  const subjectTable = useTable<Subject>({
-    columns: useMemo<ColumnDef<Subject>[]>(() => {
-      return [
-        {
-          id: "code",
-          accessorKey: "code",
-          size: 100,
-          header: () => <p className="column-title ml-2">Code</p>,
-          cell: ({ getValue }) => <Badge>{getValue<string>()}</Badge>,
-        },
-        {
-          id: "name",
-          accessorKey: "name",
-          size: 100,
-          header: () => <p className="column-title ml-2">Name</p>,
-          cell: ({ getValue }) => <Badge>{getValue<string>()}</Badge>,
-          filterFn: "includesString", // search based on string
-        },
-        {
-          id: "department",
-          accessorKey: "department",
-          size: 100,
-          header: () => <p className="column-title ml-2">Department</p>,
-          cell: ({ getValue }) => (
-            <Badge variant="secondary">{getValue<string>()}</Badge>
-          ),
-        },
-        {
-          id: "description",
-          accessorKey: "description",
-          size: 300,
-          header: () => <p className="column-title ml-2">Description</p>,
-          cell: ({ getValue }) => (
-            <span className="text-foreground truncate line-clamp-2">
-              {getValue<string>()}
-            </span>
-          ),
-        },
-      ];
-    }, []),
+   const subjectTable = useTable<Subject>({
+    columns: subjectColumns,
     refineCoreProps: {
       resource: "subjects",
-      filters: {
-        permanent: [...departmentFilters, ...searchFilters],
-      },
-      sorters: {
-        initial: [{ field: "id", order: "desc" }],
-      },
       pagination: {
         pageSize: 10,
         mode: "server",
       },
+      filters: {
+        // Compose refine filters from the current UI selections.
+        permanent: [...departmentFilters, ...searchFilters],
+      },
+      sorters: {
+        initial: [
+          {
+            field: "id",
+            order: "desc",
+          },
+        ],
+      },
     },
   });
-
+  console.log(subjectTable)
   return (
     <ListView>
       <Breadcrumb />
