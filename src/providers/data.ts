@@ -2,6 +2,12 @@ import { CreateDataProviderOptions, createDataProvider } from "@refinedev/rest";
 import { ListResponse } from "@/types";
 import { BACKEND_BASE_URL } from "@/constants";
 
+if (!BACKEND_BASE_URL) {
+  throw new Error(
+    "BACKEND_BASE_URL is not configured, Please set VITE_BACKEND_BASE_URL in .env file",
+  );
+}
+
 const options: CreateDataProviderOptions = {
   getList: {
     getEndpoint: ({ resource }) => resource,
@@ -21,7 +27,7 @@ const options: CreateDataProviderOptions = {
       const page = pagination?.currentPage ?? 1;
       const pageSize = pagination?.pageSize ?? 10;
 
-      const params: Record<string, string|number> = { page, limit: pageSize };
+      const params: Record<string, string | number> = { page, limit: pageSize };
 
       filters?.forEach((filter) => {
         const field = "field" in filter ? filter.field : "";
